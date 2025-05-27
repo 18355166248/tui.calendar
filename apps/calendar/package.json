@@ -87,6 +87,9 @@
     "webpack-inject-plugin": "^1.5.5"
   },
   "scripts": {
+    "develop": "npm run storybook",
+    "storybook": "start-storybook -p 6006",
+    "storybook:build": "build-storybook",
     "check-types": "tsc -p ./tsconfig.json --noEmit",
     "lint": "npm run check-types && eslint .",
     "release-note": "tuie",
@@ -96,9 +99,6 @@
     "build:esm": "vite build",
     "build:types": "rimraf types/ && tsc -p ./tsconfig.declaration.json",
     "analyze": "webpack --config webpack.config.js --env --profile --json > stats.json && webpack-bundle-analyzer stats.json ./dist",
-    "develop": "npm run storybook",
-    "storybook": "start-storybook -p 6006",
-    "storybook:build": "build-storybook",
     "docs:prebuild": "npm run build && tsc --outDir tmpdoc --sourceMap false",
     "docs:dev": "rimraf tmpdoc/ && npm run docs:prebuild && source ~/.nvm/nvm.sh && nvm use 10 && tuidoc --serv",
     "docs:build": "rimraf tmpdoc/ && npm run docs:prebuild && source ~/.nvm/nvm.sh && nvm use 10 && tuidoc",
