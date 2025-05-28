@@ -451,13 +451,26 @@ export function createTimeGridData(
   };
 }
 
+/**
+ * 容器位置信息接口
+ */
 interface ContainerPosition {
-  left: number;
-  top: number;
-  clientLeft: number;
-  clientTop: number;
+  left: number; // 容器左边距
+  top: number; // 容器上边距
+  clientLeft: number; // 客户端左边距
+  clientTop: number; // 客户端上边距
 }
 
+/**
+ * 获取相对于容器的鼠标位置
+ * @param clientX 鼠标客户端X坐标
+ * @param clientY 鼠标客户端Y坐标
+ * @param left 容器左边距
+ * @param top 容器上边距
+ * @param clientLeft 客户端左边距
+ * @param clientTop 客户端上边距
+ * @returns 相对位置坐标 [x, y]
+ */
 function getRelativeMousePosition(
   { clientX, clientY }: ClientMousePosition,
   { left, top, clientLeft, clientTop }: ContainerPosition
@@ -465,12 +478,30 @@ function getRelativeMousePosition(
   return [clientX - left - clientLeft, clientY - top - clientTop];
 }
 
+/**
+ * 根据位置计算索引
+ * @param arrayLength 数组长度
+ * @param maxRange 最大范围
+ * @param currentPosition 当前位置
+ * @returns 计算得出的索引，限制在有效范围内
+ */
 function getIndexFromPosition(arrayLength: number, maxRange: number, currentPosition: number) {
   const calculatedIndex = Math.floor(ratio(maxRange, arrayLength, currentPosition));
 
   return limit(calculatedIndex, [0], [arrayLength - 1]);
 }
 
+/**
+ * 创建网格位置查找器
+ * 用于根据鼠标位置确定在日历网格中的行列索引
+ *
+ * @param rowsCount 网格行数
+ * @param columnsCount 网格列数
+ * @param container 容器DOM元素
+ * @param narrowWeekend 是否缩窄周末显示
+ * @param startDayOfWeek 一周开始的日期（0=周日，1=周一...）
+ * @returns GridPositionFinder 网格位置查找函数
+ */
 export function createGridPositionFinder({
   rowsCount,
   columnsCount,
@@ -484,22 +515,34 @@ export function createGridPositionFinder({
   narrowWeekend?: boolean;
   startDayOfWeek?: Day;
 }): GridPositionFinder {
+  // 如果容器不存在，返回始终返回null的函数
   if (isNil(container)) {
     return (() => null) as GridPositionFinder;
   }
 
+  // 生成从起始日期开始的连续天数范围，并转换为星期几（0-6）
   const dayRange = range(startDayOfWeek, startDayOfWeek + columnsCount).map(
     (day) => day % WEEK_DAYS
   );
+
+  // 如果启用了周末缩窄，计算周末天数
   const narrowColumnCount = narrowWeekend ? dayRange.filter((day) => isWeekend(day)).length : 0;
 
+  /**
+   * 网格位置查找函数
+   * @param mousePosition 鼠标位置
+   * @returns 网格位置信息（行列索引）或null
+   */
   return function gridPositionFinder(mousePosition) {
+    // 获取容器的位置和尺寸信息
     const {
       left: containerLeft,
       top: containerTop,
       width: containerWidth,
       height: containerHeight,
     } = container.getBoundingClientRect();
+
+    // 计算鼠标相对于容器的位置
     const [left, top] = getRelativeMousePosition(mousePosition, {
       left: containerLeft,
       top: containerTop,
@@ -507,29 +550,42 @@ export function createGridPositionFinder({
       clientTop: container.clientTop,
     });
 
+    // 检查鼠标是否在容器范围内
     if (left < 0 || top < 0 || left > containerWidth || top > containerHeight) {
       return null;
     }
 
+    // 计算单位宽度
+    // 如果启用周末缩窄：总宽度除以(总列数 - 周末列数 + 1)
+    // 否则：总宽度除以总列数
     const unitWidth = narrowWeekend
       ? containerWidth / (columnsCount - narrowColumnCount + 1)
       : containerWidth / columnsCount;
+
+    // 计算每列的宽度列表
+    // 如果启用周末缩窄且该天是周末，则宽度为单位宽度的一半
     const columnWidthList = dayRange.map((dayOfWeek) =>
       narrowWeekend && isWeekend(dayOfWeek) ? unitWidth / 2 : unitWidth
     );
+
+    // 计算每列的左边距位置列表
     const columnLeftList: number[] = [];
     columnWidthList.forEach((width, index) => {
       if (index === 0) {
-        columnLeftList.push(0);
+        columnLeftList.push(0); // 第一列左边距为0
       } else {
+        // 后续列的左边距 = 前一列的左边距 + 前一列的宽度
         columnLeftList.push(columnLeftList[index - 1] + columnWidthList[index - 1]);
       }
     });
+
+    // 查找鼠标位置对应的列索引
+    // 找到最后一个左边距小于等于鼠标X位置的列
     const columnIndex = findLastIndex(columnLeftList, (columnLeft) => left >= columnLeft);
 
     return {
-      columnIndex,
-      rowIndex: getIndexFromPosition(rowsCount, containerHeight, top),
+      columnIndex, // 列索引
+      rowIndex: getIndexFromPosition(rowsCount, containerHeight, top), // 行索引
     };
   };
 }
