@@ -381,19 +381,35 @@ export function getWeekDates(
   }, []);
 }
 
+/**
+ * 获取网格列数据
+ * 计算日历网格中每列的宽度和位置信息
+ *
+ * @param datesOfWeek 一周的日期数组 (通常是5天或7天)
+ * @param narrowWeekend 是否缩窄周末显示，默认为false
+ * @returns 包含每列日期、宽度和左边距的数组
+ */
 // @TODO: replace `getRowStyleInfo` to this function
 export function getColumnsData(
   datesOfWeek: TZDate[], // 5 or 7 dates
   narrowWeekend = false
 ): CommonGridColumn[] {
+  // 获取日期数量
   const datesCount = datesOfWeek.length;
+
+  // 是否应用周末缩窄：当日期数量大于5且启用了周末缩窄时
   const shouldApplyNarrowWeekend = datesCount > 5 && narrowWeekend;
+
+  // 计算默认列宽度（百分比）
+  // 如果启用周末缩窄，分母减1是因为周末列会占用一半宽度
   const defaultWidthByColumns = shouldApplyNarrowWeekend
     ? 100 / (datesCount - 1)
     : 100 / datesCount;
 
   return datesOfWeek
     .map((date) => {
+      // 计算每列的宽度
+      // 如果启用周末缩窄且当前日期是周末，则宽度为默认宽度的一半
       const width =
         shouldApplyNarrowWeekend && isWeekend(date.getDay())
           ? defaultWidthByColumns / 2
@@ -405,8 +421,11 @@ export function getColumnsData(
       };
     })
     .reduce<CommonGridColumn[]>((result, currentDateAndWidth, index) => {
+      // 获取前一列的信息
       const prev = result[index - 1];
 
+      // 计算当前列的左边距
+      // 第一列左边距为0，其他列的左边距 = 前一列的左边距 + 前一列的宽度
       result.push({
         ...currentDateAndWidth,
         left: index === 0 ? 0 : prev.left + prev.width,
@@ -416,6 +435,17 @@ export function getColumnsData(
     }, []);
 }
 
+/**
+ * 创建时间网格数据
+ * 生成周视图或日视图的时间网格结构，包含列（日期）和行（时间段）信息
+ *
+ * @param datesOfWeek 一周的日期数组
+ * @param options 配置选项
+ * @param options.hourStart 开始小时 (如：9表示上午9点)
+ * @param options.hourEnd 结束小时 (如：18表示下午6点)
+ * @param options.narrowWeekend 是否缩窄周末显示，可选
+ * @returns 时间网格数据，包含列和行信息
+ */
 export function createTimeGridData(
   datesOfWeek: TZDate[],
   options: {
@@ -424,30 +454,43 @@ export function createTimeGridData(
     narrowWeekend?: boolean;
   }
 ): TimeGridData {
+  // 获取列数据（日期列）
   const columns = getColumnsData(datesOfWeek, options.narrowWeekend ?? false);
 
+  // 计算时间步数：每小时分为2个30分钟时间段
   const steps = (options.hourEnd - options.hourStart) * 2;
+
+  // 计算每行的基础高度（百分比）
   const baseHeight = 100 / steps;
+
+  // 生成时间行数据
   const rows = range(steps).map((step, index) => {
+    // 判断是否为奇数索引（表示30分钟时间段）
     const isOdd = index % 2 === 1;
+
+    // 计算当前小时
     const hour = options.hourStart + Math.floor(step / 2);
+
+    // 生成开始时间字符串（格式：HH:MM）
     const startTime = `${hour}:${isOdd ? '30' : '00'}`.padStart(5, '0') as FormattedTimeString;
+
+    // 生成结束时间字符串（格式：HH:MM）
     const endTime = (isOdd ? `${hour + 1}:00` : `${hour}:30`).padStart(
       5,
       '0'
     ) as FormattedTimeString;
 
     return {
-      top: baseHeight * index,
-      height: baseHeight,
-      startTime,
-      endTime,
+      top: baseHeight * index, // 行的顶部位置（百分比）
+      height: baseHeight, // 行的高度（百分比）
+      startTime, // 时间段开始时间
+      endTime, // 时间段结束时间
     };
   });
 
   return {
-    columns,
-    rows,
+    columns, // 列数据（日期信息）
+    rows, // 行数据（时间段信息）
   };
 }
 

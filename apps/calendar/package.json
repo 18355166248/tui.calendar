@@ -88,7 +88,7 @@
   },
   "scripts": {
     "develop": "npm run storybook",
-    "storybook": "start-storybook -p 6006",
+    "storybook": "start-storybook -p 6007",
     "storybook:build": "build-storybook",
     "check-types": "tsc -p ./tsconfig.json --noEmit",
     "lint": "npm run check-types && eslint .",

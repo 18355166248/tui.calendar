@@ -119,6 +119,7 @@ interface Props {
 }
 
 export const TimeColumn = memo(function TimeColumn({ timeGridRows, nowIndicatorState }: Props) {
+  console.log('🚀 ~ TimeColumn ~ timeGridRows:', timeGridRows);
   const showNowIndicator = useStore(showNowIndicatorOptionSelector);
   const timezones = useStore(timezonesSelector);
   const timezonesCollapsed = useStore(timezonesCollapsedOptionSelector);
