@@ -133,6 +133,13 @@ export const TimeColumn = memo(function TimeColumn({ timeGridRows, nowIndicatorS
   );
   const hourRowsPropsMapper = useCallback(
     (row: TimeGridRow, index: number, diffFromPrimaryTimezone?: number) => {
+      /**
+       * 判断是否应该隐藏时间行
+       * 当显示当前时间指示器时，如果指示器位置与时间行重叠，则隐藏该时间行以避免视觉冲突
+       * @param rowTop - 时间行的顶部位置
+       * @param rowHeight - 时间行的高度
+       * @returns 如果应该隐藏时间行则返回 true，否则返回 false
+       */
       const shouldHideRow = ({ top: rowTop, height: rowHeight }: TimeGridRow) => {
         if (!showNowIndicator || isNil(nowIndicatorState)) {
           return false;
