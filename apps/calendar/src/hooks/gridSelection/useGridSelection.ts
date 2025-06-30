@@ -265,13 +265,19 @@ export function useGridSelection<DateCollection>({
     },
     // 鼠标抬起
     onMouseUp: (e, { draggingState }) => {
+      // 阻止事件冒泡，避免触发父元素的事件处理器
       e.stopPropagation();
 
+      // 判断是否为点击事件（拖拽状态小于等于初始状态表示没有发生拖拽）
       const isClickEvent = draggingState <= DraggingState.INIT;
 
       if (isClickEvent) {
+        // 如果是点击事件，使用带点击检测的处理函数
+        // 这个函数会处理单击和双击的冲突，并根据配置决定是否触发事件
         onMouseUpWithClick(e);
       } else {
+        // 如果是拖拽结束事件，直接调用鼠标抬起处理函数
+        // 传入 false 表示这不是点击事件，而是拖拽结束事件
         onMouseUp(e, isClickEvent);
       }
     },
