@@ -241,7 +241,6 @@ export function useGridSelection<DateCollection>({
 
       // 获取并记录初始网格位置
       const gridPosition = gridPositionFinder(e);
-      console.log('🚀 ~ gridPosition:', gridPosition, type);
 
       if (isPresent(gridPosition)) {
         setInitGridPosition(gridPosition);
