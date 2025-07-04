@@ -109,8 +109,8 @@ export function TimeGrid({ timeGridData, events }: Props) {
    * 计算所有列的事件 UI 模型
    * 为每一列筛选当天的事件，并计算渲染信息（位置、重叠处理等）
    */
-  const totalUIModels = useMemo(
-    () =>
+  const totalUIModels = useMemo(() => {
+    return (
       columns
         // 为每个日期列筛选当天的事件
         .map(({ date }) =>
@@ -128,9 +128,9 @@ export function TimeGrid({ timeGridData, events }: Props) {
             selectedDuplicateEventCid, // 选中的重复事件
             collapseDuplicateEvents as CollapseDuplicateEventsOptions // 重复事件折叠选项
           )
-        ),
-    [columns, rows, events, selectedDuplicateEventCid, collapseDuplicateEvents]
-  );
+        )
+    );
+  }, [columns, rows, events, selectedDuplicateEventCid, collapseDuplicateEvents]);
 
   /**
    * 计算当前日期相关数据
