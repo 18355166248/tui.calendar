@@ -192,6 +192,19 @@ function setDimension(uiModel: EventUIModel, options: RenderInfoOptions) {
 /**
  * 获取渲染信息选项
  * 根据事件模型和列信息计算渲染所需的所有参数
+ *
+ * 这个函数是事件渲染计算的核心，它负责：
+ * 1. 提取事件的基本时间信息（开始时间、结束时间）
+ * 2. 计算包含前置时间（goingDuration）和后置时间（comingDuration）的完整时间范围
+ * 3. 确定事件在时间列中的实际渲染范围（与列边界取交集）
+ * 4. 返回包含所有渲染计算所需参数的完整选项对象
+ *
+ * @param {EventUIModel} uiModel - 事件UI模型，包含事件的所有数据和状态信息
+ * @param {number} columnIndex - 事件在时间列中的索引位置，用于计算水平位置
+ * @param {number} baseWidth - 基础宽度（百分比），用于计算事件的宽度
+ * @param {TZDate} startColumnTime - 时间列的开始时间边界
+ * @param {TZDate} endColumnTime - 时间列的结束时间边界
+ * @returns {RenderInfoOptions} 包含所有渲染计算所需参数的选项对象
  */
 function getRenderInfoOptions(
   uiModel: EventUIModel,
@@ -200,30 +213,44 @@ function getRenderInfoOptions(
   startColumnTime: TZDate,
   endColumnTime: TZDate
 ) {
+  // 从事件模型中提取前置时间和后置时间，默认为0
+  // goingDuration: 事件开始前的时间（如准备时间）
+  // comingDuration: 事件结束后的时间（如清理时间）
   const { goingDuration = 0, comingDuration = 0 } = uiModel.model;
+
+  // 获取事件的核心开始和结束时间（不包含前置和后置时间）
   const modelStart = uiModel.getStarts();
   const modelEnd = uiModel.getEnds();
 
-  // 计算包含前置和后置时间的完整时间范围
+  // 计算包含前置时间的实际开始时间
+  // 例如：事件10:00开始，前置时间30分钟，则实际开始时间为9:30
   const goingStart = addMinutes(modelStart, -goingDuration);
+
+  // 计算包含后置时间的实际结束时间
+  // 例如：事件11:00结束，后置时间15分钟，则实际结束时间为11:15
   const comingEnd = addMinutes(modelEnd, comingDuration);
 
-  // 计算实际渲染的时间范围（与列时间范围取交集）
+  // 计算事件在时间列中的实际渲染开始时间
+  // 取事件开始时间和列开始时间的较大值，确保事件不会渲染到列边界之外
   const renderStart = max(goingStart, startColumnTime);
+
+  // 计算事件在时间列中的实际渲染结束时间
+  // 取事件结束时间和列结束时间的较小值，确保事件不会渲染到列边界之外
   const renderEnd = min(comingEnd, endColumnTime);
 
+  // 返回包含所有渲染计算所需参数的完整选项对象
   return {
-    baseWidth,
-    columnIndex,
-    modelStart,
-    modelEnd,
-    renderStart,
-    renderEnd,
-    goingStart,
-    comingEnd,
-    startColumnTime,
-    endColumnTime,
-    duplicateEvents: uiModel.duplicateEvents,
+    baseWidth, // 基础宽度，用于计算事件宽度
+    columnIndex, // 列索引，用于计算事件水平位置
+    modelStart, // 事件核心开始时间（不含前置时间）
+    modelEnd, // 事件核心结束时间（不含后置时间）
+    renderStart, // 实际渲染开始时间（与列边界取交集后）
+    renderEnd, // 实际渲染结束时间（与列边界取交集后）
+    goingStart, // 包含前置时间的完整开始时间
+    comingEnd, // 包含后置时间的完整结束时间
+    startColumnTime, // 时间列开始边界
+    endColumnTime, // 时间列结束边界
+    duplicateEvents: uiModel.duplicateEvents, // 重复事件组信息
   };
 }
 
