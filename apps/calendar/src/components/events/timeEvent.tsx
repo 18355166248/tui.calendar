@@ -40,7 +40,7 @@ interface Props {
 function getMarginLeft(left: number | string) {
   const { percent, px } = extractPercentPx(`${left}`);
 
-  return left > 0 || percent > 0 || px > 0 ? TIME_EVENT_CONTAINER_MARGIN_LEFT : 0;
+  return Number(left) > 0 || percent > 0 || px > 0 ? TIME_EVENT_CONTAINER_MARGIN_LEFT : 0;
 }
 
 function getContainerWidth(width: number | string, marginLeft: number) {

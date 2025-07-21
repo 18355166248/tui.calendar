@@ -179,7 +179,6 @@ export function getUIModelForTimeView(
     hourEnd: number;
   }
 ) {
-  console.log('🚀 ~ idsOfDay:', idsOfDay);
   // 解构条件参数
   const { start, end, uiModelTimeColl, hourStart, hourEnd } = condition;
 
